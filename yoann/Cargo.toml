@@ -1,0 +1,15 @@
+[package]
+name = "yoann"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+tree-sitter = "0.20.1"
+tree-sitter-cli = "0.20.1"
+hyper_ast = { path = "../hyper_ast" }
+hyper_ast_gen_ts_java = { path = "../gen/tree-sitter/java" }
+env_logger = "0.9.0"
+log = { version = "0.4.6", features = ["max_level_debug", "release_max_level_warn"] }
+

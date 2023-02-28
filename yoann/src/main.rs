@@ -15,8 +15,15 @@ static CASE_YOANN1: &'static str = r#"if (1 < 2) {
 
 static CASE_YOANN2: &'static str = r#"(1 < 2)"#;
 
+static CASE_YOANN3: &'static str = r#"while (true) {
+    f();
+    while (variab) {
+        g();
+    }
+}"#;
+
 fn main() {
-    let tree = JavaTreeGen::tree_sitter_parse(CASE_YOANN1.as_bytes()).unwrap_or_else(|t| t);
+    let tree = JavaTreeGen::tree_sitter_parse(CASE_YOANN3.as_bytes()).unwrap_or_else(|t| t);
 
     println!("{}", tree.root_node().to_sexp());
 
@@ -27,20 +34,15 @@ fn main() {
 }
 
 fn walk(cursor: &mut tree_sitter::TreeCursor) {
-    println!("{}", cursor.node().kind());
-    
-    
+    println!("Node: {}", cursor.node().kind());
+
     if cursor.goto_first_child() {
         walk(cursor);
-    } else if cursor.goto_next_sibling() {
-        loop {
-            walk(cursor);
+    } 
 
-            if !cursor.goto_next_sibling() {
-                break;
-            }
-        }
-    } else {
-        cursor.goto_parent();
-    }
+    while cursor.goto_next_sibling() {
+        walk(cursor);
+    } 
+    cursor.goto_parent();
+    
 }

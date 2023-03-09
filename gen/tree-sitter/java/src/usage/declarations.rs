@@ -144,8 +144,8 @@ impl<'a, T: TreePath<NodeIdentifier> + Clone + Debug> Iterator for IterDeclarati
                     assert!(b.has_children(), "{:?}", t);
                     self.path.check(&self.stores).unwrap();
                     // TODO also need to find an "=" and find the name just before
-                    let cs = b.children().unwrap();
-                    for xx in cs.iter_children() {
+                    let csimpl = b.children().unwrap();
+                    for xx in csimpl.iter_children() {
                         let bb = self.stores.node_store.resolve(*xx);
                         if bb.get_type() == Type::TS30 {
                             return Some(self.path.clone());

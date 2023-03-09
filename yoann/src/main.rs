@@ -61,29 +61,3 @@ fn walk_imp(stores: &SimpleStores, path: &StructuralPosition, root: NodeIdentifi
         }
     }
 }
-
-fn walk_hast(stores: &SimpleStores, path: &StructuralPosition, root: NodeIdentifier) {
-    let current = path;
-    let current_node = current.node().unwrap();
-    let current_node_ref = stores.node_store.resolve(*current_node);
-
-    //println!("Node: {:?}", current_node);
-    //if current_node_ref.has_label() {
-    //    println!("Label: {:?}", current_node_ref.get_label());
-    //    println!("Archetype: {:#?}", current_node_ref.archetype());
-    //    //current_node_ref.get
-    //}
-
-    println!("Type: {:?}", current_node_ref.get_type());
-    //println!("---");
-
-    //println!("Node ref: {:?}", current_node_ref);
-
-    if current_node_ref.has_children() {
-        //println!("----LOOP----");
-        for c in current_node_ref.children().unwrap().iter_children() {
-            //println!("Before recur: child: {:?}, root: {:?}", c, root);
-            walk_hast(stores, &StructuralPosition::new(*c), root);
-        }
-    }
-}

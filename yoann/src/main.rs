@@ -1,20 +1,30 @@
-use std::collections::VecDeque;
+use std::{collections::VecDeque, marker::PhantomData};
 
 use hyper_ast::{
-    types::{Type, Typed, WithChildren, Tree, IterableChildren, Labeled}, tree_gen::parser::{Node, TreeCursor}, store::SimpleStores, store::TypeStore, store::{nodes::DefaultNodeStore as NodeStore, defaults::NodeIdentifier}, store::labels::LabelStore, position::{TreePath, StructuralPosition}
+    nodes::CompressedNode,
+    position::{StructuralPosition, TreePath},
+    store::labels::LabelStore,
+    store::SimpleStores,
+    store::TypeStore,
+    store::{
+        defaults::{LabelIdentifier, NodeIdentifier},
+        nodes::{legion::HashedNodeRef, DefaultNodeStore as NodeStore},
+    },
+    tree_gen::parser::{Node, TreeCursor},
+    types::{IterableChildren, Labeled, Tree, Type, Typed, WithChildren},
 };
 
 use hyper_ast_gen_ts_java::legion_with_refs::{
-    print_tree_ids, print_tree_syntax, print_tree_syntax_with_ids, JavaTreeGen, TTreeCursor
+    print_tree_ids, print_tree_syntax, print_tree_syntax_with_ids, JavaTreeGen, TTreeCursor,
 };
-
 
 static CASE_YOANN1: &'static str = r#"if (1 < 2) {
     f();
     while (true) {}
 } else {
     while (1 == 1)
-        g();
+        while (false)
+            g();
 }"#;
 
 static CASE_YOANN2: &'static str = r#"(1 < 2)"#;
@@ -39,25 +49,57 @@ fn main() {
     let root = full_node.local.compressed_node as NodeIdentifier;
 
     //walk_hast(java_tree_gen.stores, &StructuralPosition::new(root), root);
-    walk_imp(java_tree_gen.stores, &StructuralPosition::new(root), root);
+    //walk_imp(java_tree_gen.stores, &StructuralPosition::new(root));
+
+    let walk_iter = HyperAstWalkIter::new(java_tree_gen.stores, &StructuralPosition::new(root));
+    // for cn in walk_iter {
+    //     println!("Iter type: {:?}", cn.get_type());
+    // }
+
+    let num = walk_iter
+        .filter(|n| n.get_type() == Type::WhileStatement)
+        // .for_each(|nc| println!("{:?}", nc));
+        .count();
+
+    println!("Count while: {}", num);
 }
 
-type StackElement = StructuralPosition;
-fn walk_imp(stores: &SimpleStores, path: &StructuralPosition, root: NodeIdentifier) {
-    let mut stack: VecDeque<StackElement> = VecDeque::new();
-    stack.push_back(path.clone());
+type WalkStackElement = StructuralPosition;
 
-    while !stack.is_empty() {
-        let top = stack.pop_back().unwrap();
-        
-        let node = top.node().unwrap();
-        let node_ref = stores.node_store.resolve(*node);
-        println!("Walk type: {:?}", node_ref.get_type());
+struct HyperAstWalkIter<'a> {
+    stack: VecDeque<WalkStackElement>,
+    stores: &'a SimpleStores,
+}
 
-        if node_ref.has_children() {
-            for c in node_ref.children().unwrap().iter_children().rev() {
-                stack.push_back(StructuralPosition::new(*c));
+impl<'a> HyperAstWalkIter<'a> {
+    pub fn new(stores: &'a SimpleStores, path: &StructuralPosition) -> Self {
+        let mut stack = VecDeque::new();
+        stack.push_back(path.clone());
+        Self { stack, stores }
+    }
+}
+
+// TODO: pourquoi avec HashedNodeRef il y avait un problème de lifetime
+impl<'a> Iterator for HyperAstWalkIter<'a> {
+    type Item = CompressedNode<NodeIdentifier, LabelIdentifier>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.stack.is_empty() {
+            None
+        } else {
+            let top = self.stack.pop_back().unwrap();
+
+            let node = top.node().unwrap();
+            let node_ref = self.stores.node_store.resolve(*node);
+            let compressed_node = node_ref.into_compressed_node().unwrap();
+
+            if node_ref.has_children() {
+                for c in node_ref.children().unwrap().iter_children().rev() {
+                    self.stack.push_back(StructuralPosition::new(*c));
+                }
             }
+
+            Some(compressed_node)
         }
     }
 }

@@ -10,7 +10,7 @@ members = [
     "ref-mining-evaluation",
     "benchmark_diffs",
 ]
-exclude = ["gen/tree-sitter/java/tree-sitter-java"]
+# exclude = ["gen/tree-sitter/java/tree-sitter-java"]
 default-members = [
     "hyper_diff",
     "gen/tree-sitter/java",

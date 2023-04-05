@@ -100,7 +100,7 @@ fn multi_commit_ref_ana<const SEARCH_SKIP_SIZE: usize>(
     out: Option<PathBuf>,
 ) {
     let batch_id = format!("{}:({},{})", repo_name, before, after);
-    let mut preprocessed = PreProcessedRepository::new(&repo_name);
+    let mut preprocessed = PreProcessedRepository::new(&repo_name); // Récupère le repo git ????
     let processing_ordered_commits = preprocessed.pre_process_with_limit(
         &mut fetch_github_repository(&repo_name),
         before,
@@ -188,8 +188,10 @@ fn multi_commit_ref_ana<const SEARCH_SKIP_SIZE: usize>(
             buf.flush().unwrap();
         } else {
             let mut out = io::stdout();
+            println!("Before write Instance");
             write_referencial_relations(&preprocessed.processor.main_stores, root, &mut out);
             out.flush().unwrap();
+            println!("After write Instance");
         }
         log::warn!("done searching refs");
         i += 1;

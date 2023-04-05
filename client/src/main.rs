@@ -15,117 +15,6 @@ use hyper_diff::{
     tree::tree_path::{CompressedTreePath, TreePath},
 };
 
-// fn main_compress() {
-//     // use hyper_ast_gen_ts_java::java_tree_gen_full_compress::{
-//     //     JavaTreeGen, LabelStore, NodeStore, SimpleStores,
-//     // };
-//     //     println!("Hello, world!");
-
-//     //     let mut parser = Parser::new();
-
-//     //     {
-//     //         let language = unsafe { tree_sitter_java() };
-//     //         parser.set_language(language).unwrap();
-//     //     }
-
-//     //     let mut java_tree_gen = JavaTreeGen::new();
-
-//     //     // src
-//     //     let text = {
-//     //         let source_code1 = "class A {
-//     //     class B {
-//     //         int a = 0xffff;
-//     //     }
-//     // }";
-//     //         source_code1.as_bytes()
-//     //     };
-//     //     let tree = parser.parse(text, None).unwrap();
-//     //     println!("{}", tree.root_node().to_sexp());
-
-//     //     let full_node_src = java_tree_gen.generate_default(text, tree.walk());
-
-//     //     println!("debug full node 1: {:?}", &full_node_src);
-
-//     //     // dst
-//     //     let text = {
-//     //         let source_code1 = "class A {
-//     //     class C {
-//     //         int a = 0xffff;
-//     //     }
-//     // }";
-//     //         source_code1.as_bytes()
-//     //     };
-//     //     let tree = parser.parse(text, None).unwrap();
-//     //     println!("{}", tree.root_node().to_sexp());
-
-//     //     let full_node_dst = java_tree_gen.generate_default(text, tree.walk());
-
-//     //     println!("debug full node 2: {:?}", &full_node_dst);
-
-//     //     let JavaTreeGen {
-//     //         line_break:_,
-//     //         stores: SimpleStores {
-//     //             label_store,
-//     //             type_store:_,
-//     //             node_store,
-//     //         }
-//     //     } = java_tree_gen;
-
-//     //     let mapping_store = DefaultMappingStore::default();
-//     //     // let a = SimpleBottomUpMatcher::<
-//     //     let a = ZsMatcher::<
-//     //         CompletePostOrder<u32, u16>,
-//     //         HashedCompressedNode<SyntaxNodeHashs<u32>, _, u32>,
-//     //         u16,
-//     //         NodeStore,
-//     //         LabelStore,
-//     //     >::matchh(
-//     //         &node_store,
-//     //         &label_store,
-//     //         *full_node_src.id(),
-//     //         *full_node_dst.id(),
-//     //         mapping_store,
-//     //     );
-//     //     a.mappings
-//     //         .src_to_dst
-//     //         .iter()
-//     //         .map(|x| if *x == 0 { None } else { Some(*x - 1) })
-//     //         .zip(
-//     //             a.mappings
-//     //                 .dst_to_src
-//     //                 .iter()
-//     //                 .map(|x| if *x == 0 { None } else { Some(*x - 1) }),
-//     //         )
-//     //         .enumerate()
-//     //         .for_each(|x| println!("{:?}", x));
-//     //     // a.src_to_dst.iter().enumerate().for_each(|(i,m)| {
-//     //     //     println!("{:?}", (i,m,&a.dst_to_src[*m as usize]));
-//     //     // });
-//     //     // println!("-----------");
-//     //     // a.dst_to_src.iter().enumerate().for_each(|(i,m)| {
-//     //     //     println!("{:?}", (i,m,&a.src_to_dst[*m as usize]));
-//     //     // });
-
-//     //     // // let mut out = String::new();
-//     //     // let mut out = IoOut {
-//     //     //     out: stdout()
-//     //     // };
-//     //     // serialize(
-//     //     //     &java_tree_gen.node_store,
-//     //     //     &java_tree_gen.label_store,
-//     //     //     &full_node.id(),
-//     //     //     &mut out,
-//     //     //     &std::str::from_utf8(&java_tree_gen.line_break).unwrap(),
-//     //     // );
-//     //     // println!();
-//     //     // print_tree_syntax(
-//     //     //     &java_tree_gen.node_store,
-//     //     //     &java_tree_gen.label_store,
-//     //     //     &full_node.id(),
-//     //     // );
-//     //     // println!();
-//     //     // stdout().flush().unwrap();
-// }
 
 use hyper_ast::{
     cyclomatic::{Mcc, MetaData},
@@ -138,10 +27,10 @@ use hyper_ast::{
         },
         SimpleStores, TypeStore,
     },
-    types::{Type, Typed, WithChildren},
+    types::{Type, Typed, WithChildren, Tree}, tree_gen::parser::{Node, TreeCursor},
 };
 use hyper_ast_gen_ts_java::legion_with_refs::{
-    print_tree_ids, print_tree_syntax, print_tree_syntax_with_ids, JavaTreeGen,
+    print_tree_ids, print_tree_syntax, print_tree_syntax_with_ids, JavaTreeGen, TTreeCursor
 };
 
 // static CASE_1: &'static str = "class A{}";
@@ -196,8 +85,21 @@ fn main() {
         Ok(t) => t,
         Err(t) => t,
     };
+    println!("----- Print tree sexp ----------");
     println!("{}", tree.root_node().to_sexp());
     let full_node1 = java_tree_gen.generate_file(b"", case1.as_bytes(), tree.walk());
+
+    let root_node1 = tree.root_node();
+    println!("=======");
+    println!("Root language: {:?}", root_node1.language());
+    println!("Root kind : {:?}", root_node1.kind());
+    println!("=======");
+
+    println!("\n\n======PARCOURS NODE 1=========\n");
+    let tree_yoann1 = JavaTreeGen::tree_sitter_parse(CASE_YOANN1.as_bytes()).unwrap_or_else(|e| e);
+    let mut cursor1 = tree_yoann1.walk();
+    walk(&mut cursor1);
+    println!("\n\n======FIN PARCOURS NODE 1=========\n");
 
     let tree = match JavaTreeGen::tree_sitter_parse(case2.as_bytes()) {
         Ok(t) => t,
@@ -210,6 +112,7 @@ fn main() {
     //     mut md_cache,
     //     ..
     // } = java_tree_gen;
+    println!("----- Print tree syntax ----------");
     print_tree_syntax(
         &java_tree_gen.stores.node_store,
         &java_tree_gen.stores.label_store,
@@ -222,6 +125,8 @@ fn main() {
         &full_node2.local.compressed_node,
     );
     println!();
+
+    println!("----- Print tree ids ----------");
     print_tree_ids(
         &java_tree_gen.stores.node_store,
         &full_node1.local.compressed_node,
@@ -233,11 +138,14 @@ fn main() {
     );
     println!();
 
+    dbg!("----- DBG get_type ------");
     dbg!(java_tree_gen
         .stores
         .node_store
         .resolve(full_node1.local.compressed_node)
         .get_type());
+
+    dbg!("----- DBG resolve ------");
     dbg!(&Mcc::retrieve(
         &java_tree_gen
             .stores
@@ -618,3 +526,18 @@ fn main() {
 static CASE_BIG1: &'static str = r#"class A{class C{}class B{{while(1){if(1){}else{}};}}}class D{class E{}class F{{while(2){if(2){}else{}};}}}"#;
 
 static CASE_BIG2: &'static str = r#"class A{class C{}}class B{{while(1){if(1){}else{}};}}class D{class E{}}class F{{while(2){if(2){}else{}};}}"#;
+
+static CASE_YOANN1: &'static str = r#"if (1 < 2) {
+    f();
+} else {
+    g();
+}"#;
+
+fn walk(cursor: &mut tree_sitter::TreeCursor) {
+    println!("Node: {}", cursor.node().kind());
+    if cursor.goto_first_child() {
+        walk(cursor);
+    } else if cursor.goto_next_sibling() {
+        walk(cursor);
+    }
+}

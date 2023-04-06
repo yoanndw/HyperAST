@@ -6,6 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+git2 = "0.16.1"
 tree-sitter = "0.20.1"
 tree-sitter-cli = "0.20.1"
 hyper_ast = { path = "../hyper_ast" }

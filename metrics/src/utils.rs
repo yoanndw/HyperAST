@@ -4,9 +4,6 @@ use hyper_ast_gen_ts_java::legion_with_refs::JavaTreeGen;
 
 pub fn hyper_ast_from_str(case: &str) -> (&SimpleStores, NodeIdentifier) {
     let tree = JavaTreeGen::tree_sitter_parse(case.as_bytes()).unwrap_or_else(|t| t);
-    println!("{}", tree.root_node().to_sexp());
-
-    println!("===========");
 
     let stores = Box::new(SimpleStores {
         label_store: LabelStore::new(),

@@ -1,5 +1,26 @@
-use hyper_ast::store::{nodes::DefaultNodeIdentifier as NodeIdentifier, SimpleStores};
+use hyper_ast::{store::{nodes::{DefaultNodeIdentifier as NodeIdentifier, DefaultNodeStore as NodeStore}, SimpleStores, labels::LabelStore, TypeStore}};
 use hyper_ast_cvs_git::{preprocessed::PreProcessedRepository};
+use hyper_ast_gen_ts_java::legion_with_refs::JavaTreeGen;
+
+pub fn hyper_ast_from_str(case: &str) -> (&SimpleStores, NodeIdentifier) {
+    let tree = JavaTreeGen::tree_sitter_parse(case.as_bytes()).unwrap_or_else(|t| t);
+    println!("{}", tree.root_node().to_sexp());
+
+    println!("===========");
+
+    let stores = Box::new(SimpleStores {
+        label_store: LabelStore::new(),
+        type_store: TypeStore {},
+        node_store: NodeStore::new(),
+    });
+    let md_cache = Box::new(Default::default());
+    let mut java_tree_gen = JavaTreeGen::new(Box::leak(stores), Box::leak(md_cache));
+
+    let full_node = java_tree_gen.generate_file(b"", case.as_bytes(), tree.walk());
+    let root = full_node.local.compressed_node as NodeIdentifier;
+
+    (java_tree_gen.stores, root)
+}
 
 pub fn hyper_ast_from_git_repo<'a>(preprocessed: &'a mut PreProcessedRepository, processing_ordered_commits: &'a Vec<git2::Oid>, window_size: usize) -> (&'a SimpleStores, NodeIdentifier) {
     preprocessed.processor.purge_caches();

@@ -1,3 +1,3 @@
 pub mod count;
-pub mod git;
+pub mod utils;
 pub mod walk;

@@ -9,6 +9,7 @@ fn main() {
     let case = r#"while () {
                 while () // ERROR
             }"#;
+    let case = r#"do {} while ();"#;
 
     let tree = JavaTreeGen::tree_sitter_parse(case.as_bytes()).unwrap_or_else(|t| t);
 

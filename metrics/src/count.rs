@@ -4,7 +4,7 @@ use hyper_ast::types::{Type, Typed};
 pub fn countWhileStatements(iter: HyperAstWalkIter) -> usize {
     let mut cntWhile: usize = 0;
     for n in iter {
-        if n.get_type() == Type::WhileStatement {
+        if n.get_type() == Type::WhileStatement || n.get_type() == Type::DoStatement {
             cntWhile += 1;
         }
     }
@@ -24,7 +24,7 @@ pub fn count_nodes(iter: HyperAstWalkIter) -> usize {
 mod test {
     mod from_str {
         use crate::{
-            count::countWhileStatements, utils::hyper_ast_from_str, walk::HyperAstWalkIter,
+            count::{countWhileStatements, self}, utils::hyper_ast_from_str, walk::HyperAstWalkIter,
         };
 
         macro_rules! make_test {
@@ -110,14 +110,41 @@ mod test {
         );
 
         make_test!(
-            count_whiles_do_while_not_counted,
+            count_whiles_do_while_counted,
             r#"class Main {
                 public static void main(String[] args) {
                     do {} while (1);
                 }
             }"#,
             countWhileStatements,
-            0
+            1
+        );
+
+        make_test!(
+            count_whiles_nested_whiles_and_dos,
+            r#"class Main {
+                public static void main(String[] args) {
+                    do {
+                        while () {}
+                    } while (1);
+                }
+            }"#,
+            countWhileStatements,
+            2
+        );
+
+        make_test!(
+            count_whiles_sequences_dos_and_whiles,
+            r#"class Main {
+                public static void main(String[] args) {
+                    do {} while (1);
+                    while (){}
+                    do {} while (1);
+                    while (){}
+                }
+            }"#,
+            countWhileStatements,
+            4
         );
 
         make_test!(
@@ -162,6 +189,27 @@ mod test {
         );
 
         make_test!(
+            count_whiles_do_whiles_error_no_cond,
+            "do {} while",
+            countWhileStatements,
+            0
+        );
+
+        make_test!(
+            count_whiles_do_whiles_error_no_colon,
+            "do {} while ()",
+            countWhileStatements,
+            0
+        );
+
+        make_test!(
+            count_whiles_do_whiles_one_instruction,
+            "do print(x); while ();",
+            countWhileStatements,
+            1
+        );
+
+        make_test!(
             count_whiles_just_keyword_error,
             r#"while"#,
             countWhileStatements,
@@ -174,7 +222,7 @@ mod test {
                 while () // ERROR
             }"#,
             countWhileStatements,
-            0
+            1
         );
 
         make_test!(

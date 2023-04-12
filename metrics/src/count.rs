@@ -1,18 +1,21 @@
 use crate::walk::HyperAstWalkIter;
+use hyper_ast::store::{nodes::DefaultNodeIdentifier as NodeIdentifier, SimpleStores};
 use hyper_ast::types::{Type, Typed};
 
-pub fn countWhileStatements(iter: HyperAstWalkIter) -> usize {
-    let mut cntWhile: usize = 0;
+pub fn count_while_statements(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
+    let iter = HyperAstWalkIter::new(hyper_ast.0, &hyper_ast.1);
+    let mut count: usize = 0;
     for n in iter {
         if n.get_type() == Type::WhileStatement || n.get_type() == Type::DoStatement {
-            cntWhile += 1;
+            count += 1;
         }
     }
 
-    cntWhile
+    count
 }
 
-pub fn count_nodes(iter: HyperAstWalkIter) -> usize {
+pub fn count_nodes(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
+    let iter = HyperAstWalkIter::new(hyper_ast.0, &hyper_ast.1);
     iter.filter(|n| {
         let node_type = n.get_type();
         node_type.is_expression() || node_type.is_identifier() || node_type.is_statement()
@@ -24,7 +27,7 @@ pub fn count_nodes(iter: HyperAstWalkIter) -> usize {
 mod test {
     mod from_str {
         use crate::{
-            count::{countWhileStatements, self}, utils::hyper_ast_from_str, walk::HyperAstWalkIter,
+            count::{count_while_statements}, utils::hyper_ast_from_str,
         };
 
         macro_rules! make_test {
@@ -33,9 +36,8 @@ mod test {
                 fn $test_name() {
                     const CASE: &str = $java_code;
 
-                    let (s, n) = hyper_ast_from_str(CASE);
-                    let iter = HyperAstWalkIter::new(s, &n);
-                    assert_eq!($function(iter), $expected);
+                    let ast = hyper_ast_from_str(CASE);
+                    assert_eq!($function(ast), $expected);
                 }
             };
         }
@@ -46,7 +48,7 @@ mod test {
                 public static void main(String[] args) {
                 }
             }"#,
-            countWhileStatements,
+            count_while_statements,
             0
         );
 
@@ -57,7 +59,7 @@ mod test {
                     while (true) {}
                 }
             }"#,
-            countWhileStatements,
+            count_while_statements,
             1
         );
 
@@ -70,7 +72,7 @@ mod test {
                     }
                 }
             }"#,
-            countWhileStatements,
+            count_while_statements,
             2
         );
 
@@ -87,7 +89,7 @@ mod test {
                     }
                 }
             }"#,
-            countWhileStatements,
+            count_while_statements,
             2
         );
 
@@ -105,7 +107,7 @@ mod test {
                     }
                 }
             }"#,
-            countWhileStatements,
+            count_while_statements,
             4
         );
 
@@ -116,7 +118,7 @@ mod test {
                     do {} while (1);
                 }
             }"#,
-            countWhileStatements,
+            count_while_statements,
             1
         );
 
@@ -129,7 +131,7 @@ mod test {
                     } while (1);
                 }
             }"#,
-            countWhileStatements,
+            count_while_statements,
             2
         );
 
@@ -143,14 +145,14 @@ mod test {
                     while (){}
                 }
             }"#,
-            countWhileStatements,
+            count_while_statements,
             4
         );
 
         make_test!(
             count_whiles_empty_cond,
             r#"while () {}"#,
-            countWhileStatements,
+            count_while_statements,
             1
         );
 
@@ -159,7 +161,7 @@ mod test {
             r#"while () {
                 while () {}
             }"#,
-            countWhileStatements,
+            count_while_statements,
             2
         );
 
@@ -167,7 +169,7 @@ mod test {
             count_whiles_sequence_just_whiles,
             r#"while () { }
             while () {}"#,
-            countWhileStatements,
+            count_while_statements,
             2
         );
 
@@ -177,42 +179,42 @@ mod test {
             while () {
                 while (true) {}
             }"#,
-            countWhileStatements,
+            count_while_statements,
             3
         );
 
         make_test!(
             count_whiles_no_block_error,
             r#"while ()"#,
-            countWhileStatements,
+            count_while_statements,
             0
         );
 
         make_test!(
             count_whiles_do_whiles_error_no_cond,
             "do {} while",
-            countWhileStatements,
+            count_while_statements,
             0
         );
 
         make_test!(
             count_whiles_do_whiles_error_no_colon,
             "do {} while ()",
-            countWhileStatements,
+            count_while_statements,
             0
         );
 
         make_test!(
             count_whiles_do_whiles_one_instruction,
             "do print(x); while ();",
-            countWhileStatements,
+            count_while_statements,
             1
         );
 
         make_test!(
             count_whiles_just_keyword_error,
             r#"while"#,
-            countWhileStatements,
+            count_while_statements,
             0
         );
 
@@ -221,14 +223,14 @@ mod test {
             r#"while () {
                 while () // ERROR
             }"#,
-            countWhileStatements,
+            count_while_statements,
             1
         );
 
         make_test!(
             count_whiles_no_brackets,
             r#"while () p();"#,
-            countWhileStatements,
+            count_while_statements,
             1
         );
     }

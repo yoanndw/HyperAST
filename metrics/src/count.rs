@@ -18,6 +18,9 @@ pub fn count_nodes(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
     let iter = HyperAstWalkIter::new(hyper_ast.0, &hyper_ast.1);
     iter.filter(|n| {
         let node_type = n.get_type();
+
+        // println!("{:?}", node_type);
+
         node_type.is_expression() || node_type.is_identifier() || node_type.is_statement()
     })
     .count()
@@ -27,7 +30,7 @@ pub fn count_nodes(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
 mod test {
     mod from_str {
         use crate::{
-            count::{count_while_statements}, utils::hyper_ast_from_str,
+            count::{count_while_statements, count_nodes}, utils::hyper_ast_from_str,
         };
 
         macro_rules! make_test {
@@ -232,6 +235,90 @@ mod test {
             r#"while () p();"#,
             count_while_statements,
             1
+        );
+
+        make_test!(
+            count_nodes_one_number_counts_0,
+            r#"1"#,
+            count_nodes,
+            0
+        );
+
+        make_test!(
+            count_nodes_binexp,
+            r#"1 + 2"#,
+            count_nodes,
+            1
+        );
+
+        make_test!(
+            count_nodes_one_var,
+            r#"x"#,
+            count_nodes,
+            1
+        );
+
+        make_test!(
+            count_nodes_binexp_two_vars,
+            r#"x + y"#,
+            count_nodes,
+            3
+        );
+
+        make_test!(
+            count_nodes_call_no_param,
+            r#"call();"#,
+            count_nodes,
+            3
+        );
+
+        make_test!(
+            count_nodes_call_one_param,
+            r#"call(x);"#,
+            count_nodes,
+            4
+        );
+
+        make_test!(
+            count_nodes_call_one_param_number,
+            r#"call(1);"#,
+            count_nodes,
+            3
+        );
+
+        make_test!(
+            count_nodes_call_binexp_numbers,
+            r#"call(ab / cd)"#,
+            count_nodes,
+            6
+        );
+
+        make_test!(
+            count_nodes_break,
+            r#"break;"#,
+            count_nodes,
+            1
+        );
+
+        make_test!(
+            count_nodes_return_void,
+            r#"return;"#,
+            count_nodes,
+            1
+        );
+
+        make_test!(
+            count_nodes_return_number,
+            r#"return 1;"#,
+            count_nodes,
+            1
+        );
+
+        make_test!(
+            count_nodes_return_var,
+            r#"return x;"#,
+            count_nodes,
+            2
         );
     }
 }

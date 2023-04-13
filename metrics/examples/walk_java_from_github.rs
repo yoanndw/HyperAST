@@ -1,4 +1,4 @@
-use algorithms::walk::HyperAstWalkIter;
+use hyper_ast_metrics::walk::HyperAstWalkIter;
 use hyper_ast_cvs_git::{git::fetch_github_repository, preprocessed::PreProcessedRepository};
 use hyper_ast::types::Typed;
 

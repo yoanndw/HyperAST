@@ -454,5 +454,34 @@ mod test {
             count_nodes,
             10
         );
+
+        // If, else if, else
+        make_test!(
+            count_nodes_if_elseif_cond_empty_else,
+            r#"if () {} else if (true) {} else {}"#,
+            count_nodes,
+            8
+        );
+
+        make_test!(
+            count_nodes_if_elseif_cond_else,
+            r#"if () {} else if (true) {} else {f();}"#,
+            count_nodes,
+            11
+        );
+
+        make_test!(
+            count_nodes_if_elseif_cond_block_empty_else,
+            r#"if () {} else if (true) {p();} else {}"#,
+            count_nodes,
+            11
+        );
+
+        make_test!(
+            count_nodes_if_elseif_cond_block_else,
+            r#"if () {} else if (true) {p();} else {f();}"#,
+            count_nodes,
+            14
+        );
     }
 }

@@ -320,5 +320,139 @@ mod test {
             count_nodes,
             2
         );
+
+        make_test!(
+            count_nodes_return_binexp_numbers,
+            r#"return 1 + 2;"#,
+            count_nodes,
+            2
+        );
+
+        make_test!(
+            count_nodes_return_binexp_one_var,
+            r#"return x + 1;"#,
+            count_nodes,
+            3
+        );
+
+        make_test!(
+            count_nodes_return_binexp_vars,
+            r#"return x + y;"#,
+            count_nodes,
+            4
+        );
+
+        make_test!(
+            count_nodes_if_empty_cond_empty_block,
+            r#"if () {}"#,
+            count_nodes,
+            4
+        );
+
+        make_test!(
+            count_nodes_if_cond_empty_block,
+            r#"if (true) {}"#,
+            count_nodes,
+            3
+        );
+
+        make_test!(
+            count_nodes_if_empty_cond_block,
+            r#"if () {p();}"#,
+            count_nodes,
+            7
+        );
+
+        make_test!(
+            count_nodes_if_cond_block,
+            r#"if (true) {p();}"#,
+            count_nodes,
+            6
+        );
+
+        // If else
+        make_test!(
+            count_nodes_if_empty_cond_empty_block_empty_else,
+            r#"if () {} else {}"#,
+            count_nodes,
+            5
+        );
+
+        make_test!(
+            count_nodes_if_empty_cond_empty_block_else,
+            r#"if () {} else {p();}"#,
+            count_nodes,
+            8
+        );
+
+        make_test!(
+            count_nodes_if_cond_empty_block_empty_else,
+            r#"if (true) {} else {}"#,
+            count_nodes,
+            4
+        );
+
+        make_test!(
+            count_nodes_if_cond_empty_block_else,
+            r#"if (true) {} else {p();}"#,
+            count_nodes,
+            7
+        );
+
+        make_test!(
+            count_nodes_if_empty_cond_block_empty_else,
+            r#"if () {p();} else {}"#,
+            count_nodes,
+            8
+        );
+
+        make_test!(
+            count_nodes_if_empty_cond_block_else,
+            r#"if () {p();} else {p();}"#,
+            count_nodes,
+            11
+        );
+
+        make_test!(
+            count_nodes_if_cond_block_empty_else,
+            r#"if (true) {p();} else {}"#,
+            count_nodes,
+            7
+        );
+
+        make_test!(
+            count_nodes_if_cond_block_else,
+            r#"if (true) {p();} else {p();}"#,
+            count_nodes,
+            10
+        );
+
+        make_test!(
+            count_nodes_if_elseif_empty_cond_empty_block,
+            r#"if () {} else if () {}"#,
+            count_nodes,
+            8
+        );
+
+        make_test!(
+            count_nodes_if_elseif_empty_cond_block,
+            r#"if () {} else if () {p();}"#,
+            count_nodes,
+            11
+        );
+
+        make_test!(
+            count_nodes_if_elseif_cond_empty_block,
+            r#"if () {} else if (true) {}"#,
+            count_nodes,
+            7
+        );
+
+        make_test!(
+            count_nodes_if_elseif_cond_block,
+            r#"if () {} else if (true) {p();}"#,
+            count_nodes,
+            10
+        );
     }
 }

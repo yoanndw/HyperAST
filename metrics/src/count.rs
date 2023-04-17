@@ -483,5 +483,63 @@ mod test {
             count_nodes,
             14
         );
+
+        // While
+        make_test!(
+            count_nodes_while_empty_cond_empty_block,
+            "while () {}",
+            count_nodes,
+            4
+        );
+
+        make_test!(
+            count_nodes_while_cond_empty_block,
+            "while (true) {}",
+            count_nodes,
+            3
+        );
+
+        make_test!(
+            count_nodes_while_empty_cond_block,
+            "while () {p();}",
+            count_nodes,
+            7
+        );
+
+        make_test!(
+            count_nodes_while_cond_block,
+            "while (true) {p();}",
+            count_nodes,
+            6
+        );
+
+        // Do while
+        make_test!(
+            count_nodes_dowhile_empty_cond_empty_block,
+            "do {} while ();",
+            count_nodes,
+            4
+        );
+
+        make_test!(
+            count_nodes_dowhile_cond_empty_block,
+            "do {} while (true);",
+            count_nodes,
+            3
+        );
+
+        make_test!(
+            count_nodes_dowhile_empty_cond_block,
+            "do {p();} while ();",
+            count_nodes,
+            7
+        );
+
+        make_test!(
+            count_nodes_dowhile_cond_block,
+            "do {p();} while (true);",
+            count_nodes,
+            6
+        );
     }
 }

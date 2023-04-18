@@ -36,7 +36,7 @@ pub fn count_instanceofs(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
     iter.filter(|n| n.get_type() == Type::InstanceofExpression).count()
 }
 
-pub fn count_magic_numbers(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
+pub fn count_numbers(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
     let iter = HyperAstWalkIter::new(hyper_ast.0, &hyper_ast.1);
     iter.filter(|n| {
         let t = n.get_type();
@@ -54,7 +54,7 @@ pub fn count_magic_numbers(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize 
 mod test {
     mod from_str {
         use crate::{
-            count::{count_instanceofs, count_magic_numbers, count_nodes, count_while_statements},
+            count::{count_instanceofs, count_numbers, count_nodes, count_while_statements},
             utils::hyper_ast_from_str,
         };
 
@@ -683,21 +683,21 @@ mod test {
         make_test!(count_nodes_decl_type_inference, "var b;", count_nodes, 3);
 
         // Magic numbers
-        make_test!(count_numbers_int, "1", count_magic_numbers, 1);
+        make_test!(count_numbers_int, "1", count_numbers, 1);
 
-        make_test!(count_numbers_bin_int, "0b011", count_magic_numbers, 1);
+        make_test!(count_numbers_bin_int, "0b011", count_numbers, 1);
 
-        make_test!(count_numbers_octal_int, "01", count_magic_numbers, 1);
+        make_test!(count_numbers_octal_int, "01", count_numbers, 1);
 
-        make_test!(count_numbers_hex_int, "0x1", count_magic_numbers, 1);
+        make_test!(count_numbers_hex_int, "0x1", count_numbers, 1);
 
-        make_test!(count_numbers_double, "1.12", count_magic_numbers, 1);
+        make_test!(count_numbers_double, "1.12", count_numbers, 1);
 
-        make_test!(count_numbers_hex_double, "0x0.AE", count_magic_numbers, 1);
+        make_test!(count_numbers_hex_double, "0x0.AE", count_numbers, 1);
 
-        make_test!(count_numbers_no_number, "int a;", count_magic_numbers, 0);
+        make_test!(count_numbers_no_number, "int a;", count_numbers, 0);
 
-        make_test!(count_numbers_empty_str, "", count_magic_numbers, 0);
+        make_test!(count_numbers_empty_str, "", count_numbers, 0);
 
         make_test!(
             count_numbers_normal_case_1,
@@ -706,7 +706,7 @@ mod test {
                     System.out.println(0x20 + 12 + 0);
                 }
             }"#,
-            count_magic_numbers,
+            count_numbers,
             3
         );
 
@@ -722,7 +722,7 @@ mod test {
                     System.out.println(x + y * z * z);
                 }
             }"#,
-            count_magic_numbers,
+            count_numbers,
             5
         );
 
@@ -733,7 +733,7 @@ mod test {
                     System.out.println("Hello");
                 }
             }"#,
-            count_magic_numbers,
+            count_numbers,
             0
         );
     }

@@ -256,6 +256,42 @@ mod test {
 
         make_test!(count_nodes_if_cond_block, r#"if (true) {p();}"#, count_nodes, 6);
 
+        // Lambda
+        make_test!(
+            count_nodes_lambda_no_arg_empty_block,
+            "var l = () -> {};",
+            count_nodes,
+            5
+        );
+
+        make_test!(
+            count_nodes_lambda_no_arg_number,
+            "var l = () -> 5;",
+            count_nodes,
+            4
+        );
+
+        make_test!(
+            count_nodes_lambda_one_arg_empty_block,
+            "var l = (a) -> {};",
+            count_nodes,
+            6
+        );
+
+        make_test!(
+            count_nodes_lambda_one_arg_number,
+            "var l = (a) -> 5;",
+            count_nodes,
+            5
+        );
+
+        make_test!(
+            count_nodes_lambda_one_arg_variable,
+            "var l = (a) -> a;",
+            count_nodes,
+            6
+        );
+
         // If else
         make_test!(
             count_nodes_if_empty_cond_empty_block_empty_else,
@@ -633,6 +669,21 @@ mod test {
             }"#,
             count_nodes,
             4
+        );
+
+        // Class instance
+        make_test!(
+            count_nodes_decl_class_instance,
+            "B b;",
+            count_nodes,
+            3
+        );
+
+        make_test!(
+            count_nodes_decl_type_inference,
+            "var b;",
+            count_nodes,
+            3
         );
     }
 }

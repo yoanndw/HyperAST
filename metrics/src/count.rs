@@ -33,8 +33,19 @@ pub fn count_nodes(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
 
 pub fn count_instanceofs(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
     let iter = HyperAstWalkIter::new(hyper_ast.0, &hyper_ast.1);
+    iter.filter(|n| n.get_type() == Type::InstanceofExpression).count()
+}
+
+pub fn count_magic_numbers(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
+    let iter = HyperAstWalkIter::new(hyper_ast.0, &hyper_ast.1);
     iter.filter(|n| {
-        n.get_type() == Type::InstanceofExpression
+        let t = n.get_type();
+        t == Type::DecimalIntegerLiteral
+            || t == Type::BinaryIntegerLiteral // 0b1001
+            || t == Type::OctalIntegerLiteral  // 023
+            || t == Type::HexIntegerLiteral    // 0x01A
+            || t == Type::DecimalFloatingPointLiteral // 0.01(f)
+            || t == Type::HexFloatingPointLiteral     // 0x0.01AE
     })
     .count()
 }
@@ -43,7 +54,7 @@ pub fn count_instanceofs(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
 mod test {
     mod from_str {
         use crate::{
-            count::{count_nodes, count_while_statements, count_instanceofs},
+            count::{count_instanceofs, count_magic_numbers, count_nodes, count_while_statements},
             utils::hyper_ast_from_str,
         };
 
@@ -59,33 +70,13 @@ mod test {
             };
         }
 
-        make_test!(
-            count_instanceofs_just_instanceof,
-            "instanceof",
-            count_instanceofs,
-            1
-        );
+        make_test!(count_instanceofs_just_instanceof, "instanceof", count_instanceofs, 0);
 
-        make_test!(
-            count_instanceofs_empty_str,
-            "",
-            count_instanceofs,
-            0
-        );
+        make_test!(count_instanceofs_empty_str, "", count_instanceofs, 0);
 
-        make_test!(
-            count_instanceofs_no_instanceof_dowhile,
-            "do {} while ()",
-            count_instanceofs,
-            0
-        );
+        make_test!(count_instanceofs_no_instanceof_dowhile, "do {} while ();", count_instanceofs, 0);
 
-        make_test!(
-            count_instanceofs_in_if,
-            "if (c instanceof Object) {}",
-            count_instanceofs,
-            1
-        );
+        make_test!(count_instanceofs_in_if, "if (c instanceof Object) {}", count_instanceofs, 1);
 
         make_test!(
             count_instanceofs_sequence_ifs,
@@ -347,40 +338,15 @@ mod test {
         make_test!(count_nodes_if_cond_block, r#"if (true) {p();}"#, count_nodes, 6);
 
         // Lambda
-        make_test!(
-            count_nodes_lambda_no_arg_empty_block,
-            "var l = () -> {};",
-            count_nodes,
-            5
-        );
+        make_test!(count_nodes_lambda_no_arg_empty_block, "var l = () -> {};", count_nodes, 5);
 
-        make_test!(
-            count_nodes_lambda_no_arg_number,
-            "var l = () -> 5;",
-            count_nodes,
-            4
-        );
+        make_test!(count_nodes_lambda_no_arg_number, "var l = () -> 5;", count_nodes, 4);
 
-        make_test!(
-            count_nodes_lambda_one_arg_empty_block,
-            "var l = (a) -> {};",
-            count_nodes,
-            6
-        );
+        make_test!(count_nodes_lambda_one_arg_empty_block, "var l = (a) -> {};", count_nodes, 6);
 
-        make_test!(
-            count_nodes_lambda_one_arg_number,
-            "var l = (a) -> 5;",
-            count_nodes,
-            5
-        );
+        make_test!(count_nodes_lambda_one_arg_number, "var l = (a) -> 5;", count_nodes, 5);
 
-        make_test!(
-            count_nodes_lambda_one_arg_variable,
-            "var l = (a) -> a;",
-            count_nodes,
-            6
-        );
+        make_test!(count_nodes_lambda_one_arg_variable, "var l = (a) -> a;", count_nodes, 6);
 
         // If else
         make_test!(
@@ -513,93 +479,48 @@ mod test {
         make_test!(count_nodes_dowhile_empty_cond_block, "do {p();} while ();", count_nodes, 7);
 
         make_test!(count_nodes_dowhile_cond_block, "do {p();} while (true);", count_nodes, 6);
-        
+
         // Variables
-        make_test!(
-            count_nodes_int_a,
-            "int a;",
-            count_nodes,
-            2
-        );
+        make_test!(count_nodes_int_a, "int a;", count_nodes, 2);
 
-        make_test!(
-            count_nodes_int_a_5,
-            "int a = 5;",
-            count_nodes,
-            2
-        );
+        make_test!(count_nodes_int_a_5, "int a = 5;", count_nodes, 2);
 
-        make_test!(
-            count_nodes_int_a_5_plus_2,
-            "int a = 5 + 2;",
-            count_nodes,
-            3
-        );
+        make_test!(count_nodes_int_a_5_plus_2, "int a = 5 + 2;", count_nodes, 3);
 
-        make_test!(
-            count_nodes_int_a_5_plus_x,
-            "int a = 5 + x;",
-            count_nodes,
-            4
-        );
+        make_test!(count_nodes_int_a_5_plus_x, "int a = 5 + x;", count_nodes, 4);
 
-        make_test!(
-            count_nodes_int_a_x_plus_y,
-            "int a = x + y;",
-            count_nodes,
-            5
-        );
-        
+        make_test!(count_nodes_int_a_x_plus_y, "int a = x + y;", count_nodes, 5);
+
         // Methods
-        make_test!(
-            count_nodes_void_f_no_arg_empty_block,
-            r#"void f() {}"#,
-            count_nodes,
-            3
-        );
-        
-        make_test!(
-            count_nodes_void_f_no_arg_block,
-            r#"void f() {p();}"#,
-            count_nodes,
-            6
-        );
-        
-        make_test!(
-            count_nodes_void_f_one_arg_empty_block,
-            r#"void f(int a) {}"#,
-            count_nodes,
-            4
-        );
-        
-        make_test!(
-            count_nodes_void_f_one_arg_block,
-            r#"void f(int a) {p();}"#,
-            count_nodes,
-            7
-        );
-        
+        make_test!(count_nodes_void_f_no_arg_empty_block, r#"void f() {}"#, count_nodes, 3);
+
+        make_test!(count_nodes_void_f_no_arg_block, r#"void f() {p();}"#, count_nodes, 6);
+
+        make_test!(count_nodes_void_f_one_arg_empty_block, r#"void f(int a) {}"#, count_nodes, 4);
+
+        make_test!(count_nodes_void_f_one_arg_block, r#"void f(int a) {p();}"#, count_nodes, 7);
+
         make_test!(
             count_nodes_public_void_f_no_arg_empty_block,
             r#"public void f() {}"#,
             count_nodes,
             3
         );
-        
+
         make_test!(
             count_nodes_private_void_f_no_arg_empty_block,
             r#"private void f() {}"#,
             count_nodes,
             3
         );
-        
+
         make_test!(
             count_nodes_protected_void_f_no_arg_empty_block,
             r#"protected void f() {}"#,
             count_nodes,
             3
         );
-        
+
         make_test!(
             count_nodes_static_void_f_no_arg_empty_block,
             r#"static void f() {}"#,
@@ -608,12 +529,7 @@ mod test {
         );
 
         // Class
-        make_test!(
-            count_nodes_empty_class,
-            r#"class C {}"#,
-            count_nodes,
-            2
-        );
+        make_test!(count_nodes_empty_class, r#"class C {}"#, count_nodes, 2);
 
         make_test!(
             count_nodes_class_internal_attr,
@@ -762,19 +678,63 @@ mod test {
         );
 
         // Class instance
+        make_test!(count_nodes_decl_class_instance, "B b;", count_nodes, 3);
+
+        make_test!(count_nodes_decl_type_inference, "var b;", count_nodes, 3);
+
+        // Magic numbers
+        make_test!(count_numbers_int, "1", count_magic_numbers, 1);
+
+        make_test!(count_numbers_bin_int, "0b011", count_magic_numbers, 1);
+
+        make_test!(count_numbers_octal_int, "01", count_magic_numbers, 1);
+
+        make_test!(count_numbers_hex_int, "0x1", count_magic_numbers, 1);
+
+        make_test!(count_numbers_double, "1.12", count_magic_numbers, 1);
+
+        make_test!(count_numbers_hex_double, "0x0.AE", count_magic_numbers, 1);
+
+        make_test!(count_numbers_no_number, "int a;", count_magic_numbers, 0);
+
+        make_test!(count_numbers_empty_str, "", count_magic_numbers, 0);
+
         make_test!(
-            count_nodes_decl_class_instance,
-            "B b;",
-            count_nodes,
+            count_numbers_normal_case_1,
+            r#"class M {
+                public static void main(String[] args) {
+                    System.out.println(0x20 + 12 + 0);
+                }
+            }"#,
+            count_magic_numbers,
             3
         );
 
         make_test!(
-            count_nodes_decl_type_inference,
-            "var b;",
-            count_nodes,
-            3
+            count_numbers_normal_case_2,
+            r#"class M {
+                public static void main(String[] args) {
+                    float x = 0.02f;
+                    float y = 1.563f;
+                    float z = 0x0.12f;
+                    float z2 = 0.2 + 0x0.12f;
+
+                    System.out.println(x + y * z * z);
+                }
+            }"#,
+            count_magic_numbers,
+            5
+        );
+
+        make_test!(
+            count_numbers_normal_case_3,
+            r#"class M {
+                public static void main(String[] args) {
+                    System.out.println("Hello");
+                }
+            }"#,
+            count_magic_numbers,
+            0
         );
     }
 }
-

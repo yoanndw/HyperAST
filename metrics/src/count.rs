@@ -473,5 +473,166 @@ mod test {
             count_nodes,
             3
         );
+        
+        make_test!(
+            count_nodes_static_void_f_no_arg_empty_block,
+            r#"static void f() {}"#,
+            count_nodes,
+            3
+        );
+
+        // Class
+        make_test!(
+            count_nodes_empty_class,
+            r#"class C {}"#,
+            count_nodes,
+            2
+        );
+
+        make_test!(
+            count_nodes_class_internal_attr,
+            r#"class C {
+                int a;
+            }"#,
+            count_nodes,
+            4
+        );
+
+        make_test!(
+            count_nodes_class_static_internal_attr,
+            r#"class C {
+                static int a;
+            }"#,
+            count_nodes,
+            4
+        );
+
+        make_test!(
+            count_nodes_class_public_attr,
+            r#"class C {
+                public int b;
+            }"#,
+            count_nodes,
+            4
+        );
+
+        make_test!(
+            count_nodes_class_internal_method_no_arg_empty_block,
+            r#"class C {
+                void f() {}
+            }"#,
+            count_nodes,
+            5
+        );
+
+        make_test!(
+            count_nodes_class_private_method_no_arg_empty_block,
+            r#"class C {
+                private void g() {}
+            }"#,
+            count_nodes,
+            5
+        );
+
+        make_test!(
+            count_nodes_class_static_method_no_arg_empty_block,
+            r#"class C {
+                static void g() {}
+            }"#,
+            count_nodes,
+            5
+        );
+
+        make_test!(
+            count_nodes_class_internal_method_no_arg_block,
+            r#"class C {
+                void f() {p();}
+            }"#,
+            count_nodes,
+            8
+        );
+
+        make_test!(
+            count_nodes_class_private_method_no_arg_block,
+            r#"class C {
+                private void g() {p();}
+            }"#,
+            count_nodes,
+            8
+        );
+
+        make_test!(
+            count_nodes_class_static_method_no_arg_block,
+            r#"class C {
+                static void g() {p();}
+            }"#,
+            count_nodes,
+            8
+        );
+
+        make_test!(
+            count_nodes_class_internal_method_one_arg_empty_block,
+            r#"class C {
+                void f(int a) {}
+            }"#,
+            count_nodes,
+            6
+        );
+
+        make_test!(
+            count_nodes_class_private_method_one_arg_empty_block,
+            r#"class C {
+                private void g(int b) {}
+            }"#,
+            count_nodes,
+            6
+        );
+
+        make_test!(
+            count_nodes_class_static_method_one_arg_empty_block,
+            r#"class C {
+                static void g(int b) {}
+            }"#,
+            count_nodes,
+            6
+        );
+
+        make_test!(
+            count_nodes_class_internal_method_one_arg_block,
+            r#"class C {
+                void f(int a) {p();}
+            }"#,
+            count_nodes,
+            9
+        );
+
+        make_test!(
+            count_nodes_class_private_method_one_arg_block,
+            r#"class C {
+                private void g(int b) {p();}
+            }"#,
+            count_nodes,
+            9
+        );
+
+        make_test!(
+            count_nodes_class_static_method_one_arg_block,
+            r#"class C {
+                static void g(int b) {p();}
+            }"#,
+            count_nodes,
+            9
+        );
+
+        make_test!(
+            count_nodes_class_static_inner_class,
+            r#"class C {
+                static class D {
+
+                }
+            }"#,
+            count_nodes,
+            4
+        );
     }
 }

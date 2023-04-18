@@ -388,6 +388,42 @@ mod test {
 
         make_test!(count_nodes_dowhile_cond_block, "do {p();} while (true);", count_nodes, 6);
         
+        // Variables
+        make_test!(
+            count_nodes_int_a,
+            "int a;",
+            count_nodes,
+            2
+        );
+
+        make_test!(
+            count_nodes_int_a_5,
+            "int a = 5;",
+            count_nodes,
+            2
+        );
+
+        make_test!(
+            count_nodes_int_a_5_plus_2,
+            "int a = 5 + 2;",
+            count_nodes,
+            3
+        );
+
+        make_test!(
+            count_nodes_int_a_5_plus_x,
+            "int a = 5 + x;",
+            count_nodes,
+            4
+        );
+
+        make_test!(
+            count_nodes_int_a_x_plus_y,
+            "int a = x + y;",
+            count_nodes,
+            5
+        );
+        
         // Methods
         make_test!(
             count_nodes_void_f_no_arg_empty_block,

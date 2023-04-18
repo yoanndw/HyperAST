@@ -31,11 +31,19 @@ pub fn count_nodes(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
     .count()
 }
 
+pub fn count_instanceofs(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
+    let iter = HyperAstWalkIter::new(hyper_ast.0, &hyper_ast.1);
+    iter.filter(|n| {
+        n.get_type() == Type::InstanceofExpression
+    })
+    .count()
+}
+
 #[cfg(test)]
 mod test {
     mod from_str {
         use crate::{
-            count::{count_nodes, count_while_statements},
+            count::{count_nodes, count_while_statements, count_instanceofs},
             utils::hyper_ast_from_str,
         };
 
@@ -50,6 +58,88 @@ mod test {
                 }
             };
         }
+
+        make_test!(
+            count_instanceofs_just_instanceof,
+            "instanceof",
+            count_instanceofs,
+            1
+        );
+
+        make_test!(
+            count_instanceofs_empty_str,
+            "",
+            count_instanceofs,
+            0
+        );
+
+        make_test!(
+            count_instanceofs_no_instanceof_dowhile,
+            "do {} while ()",
+            count_instanceofs,
+            0
+        );
+
+        make_test!(
+            count_instanceofs_in_if,
+            "if (c instanceof Object) {}",
+            count_instanceofs,
+            1
+        );
+
+        make_test!(
+            count_instanceofs_sequence_ifs,
+            "if (c instanceof Object) {}
+            if (o instanceof Object) {}",
+            count_instanceofs,
+            2
+        );
+
+        make_test!(
+            count_instanceofs_nested_ifs,
+            "if (c instanceof Object) {
+                if (c instanceof Object) {}
+            }",
+            count_instanceofs,
+            2
+        );
+
+        make_test!(
+            count_instanceofs_normal_case_1,
+            r#"class M {
+                public static void main(String[] args) {
+                    var c = new Integer();
+                    System.out.println(c instanceof Integer);
+                }
+            }"#,
+            count_instanceofs,
+            1
+        );
+
+        make_test!(
+            count_instanceofs_normal_case_2,
+            r#"class M {
+                public static void main(String[] args) {
+                    var c = new Integer();
+                    if (c instanceof Double) {
+                        System.out.println("...");
+                    }
+                }
+            }"#,
+            count_instanceofs,
+            1
+        );
+
+        make_test!(
+            count_instanceofs_no_instanceof,
+            r#"class M {
+                public static void main(String[] args) {
+                    System.out.println("Hello");
+                }
+            }"#,
+            count_instanceofs,
+            0
+        );
 
         make_test!(
             count_whiles_no_while,

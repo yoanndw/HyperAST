@@ -3,7 +3,7 @@ use hyper_ast_gen_ts_java::legion_with_refs::JavaTreeGen;
 use hyper_ast_metrics::{utils::hyper_ast_from_str, walk::HyperAstWalkIter};
 
 fn main() {
-    let case = r#"while(true) {p();} /* */ do {} while(false);"#;
+    let case = r#"void f(int a) {}"#;
 
     let tree = JavaTreeGen::tree_sitter_parse(case.as_bytes()).unwrap_or_else(|t| t);
 

@@ -2,6 +2,8 @@ use crate::walk::HyperAstWalkIter;
 use hyper_ast::store::{nodes::DefaultNodeIdentifier as NodeIdentifier, SimpleStores};
 use hyper_ast::types::{Type, Typed};
 
+use std::collections::HashSet;
+
 pub fn count_while_statements(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
     let iter = HyperAstWalkIter::new(hyper_ast.0, &hyper_ast.1);
     let mut count: usize = 0;
@@ -45,16 +47,128 @@ pub fn count_numbers(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
             || t == Type::OctalIntegerLiteral  // 023
             || t == Type::HexIntegerLiteral    // 0x01A
             || t == Type::DecimalFloatingPointLiteral // 0.01(f)
-            || t == Type::HexFloatingPointLiteral     // 0x0.01AE
+            || t == Type::HexFloatingPointLiteral // 0x0.01AE
     })
     .count()
+}
+
+pub fn evaluate_plagiarism(repositories: Vec<(&SimpleStores, NodeIdentifier)>) -> Vec<Vec<f64>> {
+    let mut hashsets: Vec<_> = Vec::new();
+
+    //transform all repos into hashmaps
+    let mut repo_nb = 0;
+    for n in repositories {
+        let iter = HyperAstWalkIter::new(n.0, &n.1);
+        let mut map = HashSet::new();
+
+        let mut i = 0;
+        for n in iter {
+            map.insert(n.get_type());
+            i += 1;
+        }
+
+        hashsets.push(map);
+
+        repo_nb += 1;
+    }
+
+    //two dimension list to store result
+    // value at index (a,b) is plagiarism level between repo at index a and repo at index b in original list
+    let mut results = Vec::new();
+
+    //calculate Jaccard coefficient between every repo
+    let number_of_sets = hashsets.len();
+    for i in 0..number_of_sets {
+        let mut result = Vec::new();
+
+        for j in 0..number_of_sets {
+            //Jaccard coefficient calculation
+            let intersection = hashsets[i].intersection(&hashsets[j]);
+            let union = hashsets[i].union(&hashsets[j]);
+
+            let intersection_size = intersection.size_hint().1.expect("");
+            let union_size = union.size_hint().0;
+            let mut ratio = intersection_size as f64 / union_size as f64;
+            // rounding ratio as percentage : 0.3333333333 -> 33.33
+            ratio = ratio * 10000.0;
+            ratio = ratio.round();
+            ratio = ratio / 100.0;
+
+            /*
+            println!("Comparing repos: {:?} - {:?}", i, j);
+            println!("  repo{:?} : {:?}", i, hashsets[i]);
+            println!("  repo{:?} : {:?}", j, hashsets[j]);
+            println!("  intersection : {:?}", intersection);
+            println!("  union : {:?}", union);
+            println!("  intersection size : {:?}", intersection_size);
+            println!("  union size: {:?}", union_size);
+            println!("  ratio: {:?}%", ratio);
+            println!("");
+            */
+
+            result.push(ratio);
+        }
+
+        results.push(result);
+    }
+
+    results
+}
+
+#[cfg(test)]
+mod testplagiarism {
+    mod from_str {
+        use crate::{count::evaluate_plagiarism, utils::hyper_ast_from_str};
+
+        macro_rules! make_test {
+            ($test_name: ident, $java_code_1: tt, $java_code_2: tt, $function: ident, $expected: tt) => {
+                #[test]
+                fn $test_name() {
+                    const CASE1: &str = $java_code_1;
+                    const CASE2: &str = $java_code_2;
+
+                    let ast1 = hyper_ast_from_str(CASE1);
+                    let ast2 = hyper_ast_from_str(CASE2);
+                    let param = vec![ast1, ast2];
+                    assert_eq!($function(param), $expected);
+                }
+            };
+        }
+
+        make_test!(
+            evaluate_plagiarism_identical_repo,
+            r#"1"#,
+            r#"1"#,
+            evaluate_plagiarism,
+            [[100.0, 100.0], [100.0, 100.0]]
+        );
+
+        make_test!(
+            evaluate_plagiarism_empty_repo,
+            r#""#,
+            r#"1"#,
+            evaluate_plagiarism,
+            [[100.0, 33.33], [33.33, 100.0]]
+        );
+
+        make_test!(
+            evaluate_plagiarism_different_repo,
+            r#""#,
+            r#"class Main {
+                
+                }
+            }"#,
+            evaluate_plagiarism,
+            [[100.0, 11.11], [11.11, 100.0]]
+        );
+    }
 }
 
 #[cfg(test)]
 mod test {
     mod from_str {
         use crate::{
-            count::{count_instanceofs, count_numbers, count_nodes, count_while_statements},
+            count::{count_instanceofs, count_nodes, count_numbers, count_while_statements},
             utils::hyper_ast_from_str,
         };
 
@@ -74,7 +188,12 @@ mod test {
 
         make_test!(count_instanceofs_empty_str, "", count_instanceofs, 0);
 
-        make_test!(count_instanceofs_no_instanceof_dowhile, "do {} while ();", count_instanceofs, 0);
+        make_test!(
+            count_instanceofs_no_instanceof_dowhile,
+            "do {} while ();",
+            count_instanceofs,
+            0
+        );
 
         make_test!(count_instanceofs_in_if, "if (c instanceof Object) {}", count_instanceofs, 1);
 

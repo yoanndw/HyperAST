@@ -4,8 +4,8 @@ use hyper_ast::types::{Type, Typed};
 
 use std::collections::HashSet;
 
-pub fn count_while_statements(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
-    let iter = HyperAstWalkIter::new(hyper_ast.0, &hyper_ast.1);
+pub fn count_while_statements(hyper_ast: &(SimpleStores, NodeIdentifier)) -> usize {
+    let iter = HyperAstWalkIter::new(&hyper_ast.0, &hyper_ast.1);
     let mut count: usize = 0;
     for n in iter {
         if n.get_type() == Type::WhileStatement || n.get_type() == Type::DoStatement {
@@ -16,8 +16,8 @@ pub fn count_while_statements(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usi
     count
 }
 
-pub fn count_nodes(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
-    let iter = HyperAstWalkIter::new(hyper_ast.0, &hyper_ast.1);
+pub fn count_nodes(hyper_ast: &(SimpleStores, NodeIdentifier)) -> usize {
+    let iter = HyperAstWalkIter::new(&hyper_ast.0, &hyper_ast.1);
     iter.filter(|n| {
         let node_type = n.get_type();
 
@@ -33,13 +33,13 @@ pub fn count_nodes(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
     .count()
 }
 
-pub fn count_instanceofs(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
-    let iter = HyperAstWalkIter::new(hyper_ast.0, &hyper_ast.1);
+pub fn count_instanceofs(hyper_ast: &(SimpleStores, NodeIdentifier)) -> usize {
+    let iter = HyperAstWalkIter::new(&hyper_ast.0, &hyper_ast.1);
     iter.filter(|n| n.get_type() == Type::InstanceofExpression).count()
 }
 
-pub fn count_numbers(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
-    let iter = HyperAstWalkIter::new(hyper_ast.0, &hyper_ast.1);
+pub fn count_numbers(hyper_ast: &(SimpleStores, NodeIdentifier)) -> usize {
+    let iter = HyperAstWalkIter::new(&hyper_ast.0, &hyper_ast.1);
     iter.filter(|n| {
         let t = n.get_type();
         t == Type::DecimalIntegerLiteral
@@ -52,13 +52,13 @@ pub fn count_numbers(hyper_ast: (&SimpleStores, NodeIdentifier)) -> usize {
     .count()
 }
 
-pub fn evaluate_plagiarism(repositories: Vec<(&SimpleStores, NodeIdentifier)>) -> Vec<Vec<f64>> {
+pub fn evaluate_plagiarism(repositories: Vec<&(SimpleStores, NodeIdentifier)>) -> Vec<Vec<f64>> {
     let mut hashsets: Vec<_> = Vec::new();
 
     //transform all repos into hashmaps
     let mut repo_nb = 0;
     for n in repositories {
-        let iter = HyperAstWalkIter::new(n.0, &n.1);
+        let iter = HyperAstWalkIter::new(&n.0, &n.1);
         let mut map = HashSet::new();
 
         let mut i = 0;

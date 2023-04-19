@@ -19,8 +19,8 @@ pub fn hyper_ast_from_str(case: &str) -> (&SimpleStores, NodeIdentifier) {
     (java_tree_gen.stores, root)
 }
 
-pub fn hyper_ast_from_git_repo<'a>(preprocessed: &'a mut PreProcessedRepository, processing_ordered_commits: &'a Vec<git2::Oid>, window_size: usize) -> (&'a SimpleStores, NodeIdentifier) {
-    preprocessed.processor.purge_caches();
+pub fn hyper_ast_from_git_repo<'a>(preprocessed: PreProcessedRepository, processing_ordered_commits: Vec<git2::Oid>, window_size: usize) -> (SimpleStores, NodeIdentifier) {
+    // preprocessed.processor.purge_caches();
 
     let c_len = processing_ordered_commits.len();
     let c = (0..c_len)
@@ -36,10 +36,10 @@ pub fn hyper_ast_from_git_repo<'a>(preprocessed: &'a mut PreProcessedRepository,
     let src_tr = commit_src.1.ast_root;
     //let dst_tr = commit_dst.1.ast_root;
 
-    let stores = &preprocessed.processor.main_stores;
+    // let stores = &preprocessed.processor.main_stores;
 
     // let src_node_ref = stores.node_store.resolve(src_tr);
     // let walk_iter = HyperAstWalkIter::new(stores, &src_tr);
 
-    (stores, src_tr)
+    (preprocessed.processor.main_stores, src_tr)
 }

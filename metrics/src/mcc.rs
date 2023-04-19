@@ -3,7 +3,7 @@ use hyper_ast::cyclomatic::{Mcc, MetaData};
 use hyper_ast::store::{nodes::DefaultNodeIdentifier as NodeIdentifier, SimpleStores};
 use hyper_ast::types::{IterableChildren, Labeled, Tree, Type, Typed, WithChildren};
 
-pub fn cyclomatic_complexity(hyper_ast: (&SimpleStores, NodeIdentifier)) -> u32 {
+pub fn cyclomatic_complexity(hyper_ast: &(SimpleStores, NodeIdentifier)) -> u32 {
     let node_ref = hyper_ast.0.node_store.resolve(hyper_ast.1);
     let mcc_res = Mcc::retrieve(&node_ref);
     mcc_res.unwrap_or(0)

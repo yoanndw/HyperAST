@@ -129,7 +129,7 @@ mod testplagiarism {
 
                     let ast1 = hyper_ast_from_str(CASE1);
                     let ast2 = hyper_ast_from_str(CASE2);
-                    let param = vec![ast1, ast2];
+                    let param = vec![&ast1, &ast2];
                     assert_eq!($function(param), $expected);
                 }
             };
@@ -179,7 +179,7 @@ mod test {
                     const CASE: &str = $java_code;
 
                     let ast = hyper_ast_from_str(CASE);
-                    assert_eq!($function(ast), $expected);
+                    assert_eq!($function(&ast), $expected);
                 }
             };
         }

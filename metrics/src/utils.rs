@@ -2,21 +2,21 @@ use hyper_ast::{store::{nodes::{DefaultNodeIdentifier as NodeIdentifier, Default
 use hyper_ast_cvs_git::{preprocessed::PreProcessedRepository};
 use hyper_ast_gen_ts_java::legion_with_refs::JavaTreeGen;
 
-pub fn hyper_ast_from_str(case: &str) -> (&SimpleStores, NodeIdentifier) {
+pub fn hyper_ast_from_str(case: &str) -> (SimpleStores, NodeIdentifier) {
     let tree = JavaTreeGen::tree_sitter_parse(case.as_bytes()).unwrap_or_else(|t| t);
 
-    let stores = Box::new(SimpleStores {
+    let mut stores = SimpleStores {
         label_store: LabelStore::new(),
         type_store: TypeStore {},
         node_store: NodeStore::new(),
-    });
+    };
     let md_cache = Box::new(Default::default());
-    let mut java_tree_gen = JavaTreeGen::new(Box::leak(stores), Box::leak(md_cache));
+    let mut java_tree_gen = JavaTreeGen::new(&mut stores, Box::leak(md_cache));
 
     let full_node = java_tree_gen.generate_file(b"", case.as_bytes(), tree.walk());
     let root = full_node.local.compressed_node as NodeIdentifier;
 
-    (java_tree_gen.stores, root)
+    (stores, root)
 }
 
 pub fn hyper_ast_from_git_repo<'a>(preprocessed: PreProcessedRepository, processing_ordered_commits: Vec<git2::Oid>, window_size: usize) -> (SimpleStores, NodeIdentifier) {

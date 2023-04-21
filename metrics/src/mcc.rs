@@ -9,6 +9,12 @@ pub fn cyclomatic_complexity(hyper_ast: &(SimpleStores, NodeIdentifier)) -> u32 
     mcc_res.unwrap_or(0)
 }
 
+pub fn cyclomatic_complexity2(stores: &SimpleStores, node: &NodeIdentifier) -> u32 {
+    let node_ref = stores.node_store.resolve(*node);
+    let mcc_res = Mcc::retrieve(&node_ref);
+    mcc_res.unwrap_or(0)
+}
+
 #[cfg(test)]
 mod test {
     mod from_str {

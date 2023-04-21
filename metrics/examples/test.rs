@@ -9,7 +9,7 @@ fn main() {
 
     println!("{}", tree.root_node().to_sexp());
     let ast = hyper_ast_from_str(case);
-    for n in HyperAstWalkIter::new(ast.0, &ast.1) {
+    for n in HyperAstWalkIter::new(&ast.0, &ast.1) {
         let node_type = n.get_type();
         //println!("{:?} -> {}", n.get_type(), node_type.is_expression() || node_type.is_identifier() || node_type.is_statement());
         println!("{:?}", n.get_type());
